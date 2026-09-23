@@ -50,6 +50,9 @@ export default function IndustryDashboard() {
     });
   }, [])
 
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
+
   return (
     <div className="container p-4 sm:p-8 max-w-7xl mx-auto space-y-8">
       {/* Header */}
@@ -59,7 +62,7 @@ export default function IndustryDashboard() {
         className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
       >
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Industry Procurement</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{greeting}, {userName || 'Industry'}</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">Manage biomass demands, view smart matches, and track logistics.</p>
         </div>
         <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-900/20">
@@ -208,7 +211,25 @@ export default function IndustryDashboard() {
                   </div>
                   <div className="mt-4 sm:mt-0 flex gap-2 w-full sm:w-auto">
                     <Button variant="outline" size="sm" className="w-full sm:w-auto">View Details</Button>
-                    <Button size="sm" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700">Procure</Button>
+                    <Button 
+                      size="sm" 
+                      className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
+                      onClick={async () => {
+                        try {
+                          await api.post('/procure', {
+                            industry_id: match.industry_demand.industry_id,
+                            residue_ids: match.residue_listings.map((r: any) => r.id)
+                          });
+                          alert("Match procured successfully! Notifications sent to farmers.");
+                          window.location.reload();
+                        } catch (e) {
+                          console.error(e);
+                          alert("Failed to procure match.");
+                        }
+                      }}
+                    >
+                      Procure
+                    </Button>
                   </div>
                 </div>
               ))

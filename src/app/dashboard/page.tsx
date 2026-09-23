@@ -62,11 +62,14 @@ export default function FarmerDashboard() {
     }
   }, [])
 
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
+
   return (
     <div className="container p-4 sm:p-8 space-y-8 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Good Morning, {userName} 👋</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{greeting}, {userName} 👋</h1>
           <p className="text-muted-foreground text-lg mt-1">Here is your farm overview for today.</p>
         </div>
         <div className="flex gap-2">
@@ -305,9 +308,12 @@ export default function FarmerDashboard() {
                 <Badge variant="secondary">2 Nearby</Badge>
               </div>
             </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full" asChild>
-                <Link href="/map">View on Map</Link>
+            <CardFooter className="flex gap-2">
+              <Button variant="outline" className="w-full flex-1" asChild>
+                <Link href="/cooling-hubs">Cooling Hubs</Link>
+              </Button>
+              <Button variant="outline" className="w-full flex-1" asChild>
+                <Link href="/map">Live Map</Link>
               </Button>
             </CardFooter>
           </Card>

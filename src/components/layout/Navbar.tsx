@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
 import { ProfileDialog } from "@/components/ProfileDialog"
+import { NotificationsDropdown } from "@/components/NotificationsDropdown"
 
 export function Navbar() {
   const pathname = usePathname();
@@ -87,10 +88,6 @@ export function Navbar() {
                 Live Map
               </Link>
             )}
-            
-            <Link href="/cooling-hubs" className={`text-sm font-medium transition-colors ${pathname === '/cooling-hubs' ? (isIndustry ? 'text-blue-700 font-semibold' : 'text-green-700 font-semibold') : 'text-slate-600 hover:text-slate-900'}`}>
-              Cooling Hubs
-            </Link>
           </nav>
         )}
 
@@ -103,13 +100,7 @@ export function Navbar() {
             </Link>
           ) : (
             <>
-              <button 
-                className="text-slate-500 hover:text-slate-900 relative"
-                onClick={() => alert("You are up to date! No new notifications.")}
-                title="Notifications"
-              >
-                <Bell className="h-5 w-5" />
-              </button>
+              <NotificationsDropdown />
               <ProfileDialog />
               <button onClick={() => { supabase.auth.signOut().then(() => window.location.href = '/') }} className="text-slate-400 hover:text-red-500 transition-colors" title="Log out">
                 <LogOut className="h-5 w-5" />
