@@ -132,7 +132,7 @@ export default function AddResiduePage() {
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="residue-type">Residue Type</Label>
-              <Select value={residueType} onValueChange={setResidueType}>
+              <Select value={residueType} onValueChange={(val) => setResidueType(val || "")}>
                 <SelectTrigger id="residue-type">
                   <SelectValue placeholder="Select material type" />
                 </SelectTrigger>
@@ -155,7 +155,7 @@ export default function AddResiduePage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="unit">Unit</Label>
-                <Select value={unit} onValueChange={setUnit}>
+                <Select value={unit} onValueChange={(val) => setUnit(val || "kg")}>
                   <SelectTrigger id="unit">
                     <SelectValue placeholder="Unit" />
                   </SelectTrigger>

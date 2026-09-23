@@ -280,10 +280,10 @@ export default function MapComponent({
             {/* Draw route to Cooling Hub if selected */}
             {selectedHubIndex === idx && userLocation && hub.latitude && hub.longitude && (
               <OsrmRoute 
-                startLat={userLocation[0]} 
-                startLng={userLocation[1]}
-                endLat={hub.latitude} 
-                endLng={hub.longitude}
+                waypoints={[
+                  [userLocation[0], userLocation[1]],
+                  [hub.latitude, hub.longitude]
+                ]}
               />
             )}
           </React.Fragment>

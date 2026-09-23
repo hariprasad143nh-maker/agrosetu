@@ -37,7 +37,7 @@ export function ProfileDialog() {
           
           // Try to get from database first
           try {
-            const dbUser = await api.get(`/users/${data.user.id}`);
+            const dbUser: any = await api.get(`/users/${data.user.id}`);
             if (dbUser) {
               setName(dbUser.name || data.user.user_metadata?.full_name || "");
               setPhone(dbUser.phone || data.user.user_metadata?.phone_number || "");
