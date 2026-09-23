@@ -2,6 +2,8 @@
 
 **AgroSetu** is an AI-powered agricultural supply chain optimization platform designed to bridge the gap between farmers, industries, and logistics providers. By leveraging real-time data, predictive AI, and GIS routing, AgroSetu minimizes post-harvest losses, transforms agricultural residue into value, and optimizes cold-chain logistics.
 
+🚀 **Live Demo:** [https://agrosetu-delta.vercel.app/](https://agrosetu-delta.vercel.app/)
+
 ![AgroSetu Dashboard](https://images.unsplash.com/photo-1625246333195-78d9c38ad449?q=80&w=1000&auto=format&fit=crop) *(Placeholder image)*
 
 ---
