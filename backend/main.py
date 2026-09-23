@@ -389,12 +389,12 @@ def get_sustainability_metrics():
 # --- ALERTS & NOTIFICATIONS ---
 @app.get("/api/alerts/{user_id}")
 def get_alerts(user_id: str):
-    response = supabase_client.table("alerts").select("*").eq("user_id", user_id).order("created_at", desc=True).execute()
+    response = supabase.table("alerts").select("*").eq("user_id", user_id).order("created_at", desc=True).execute()
     return response.data
 
 @app.patch("/api/alerts/{alert_id}")
 def update_alert(alert_id: str, data: dict):
-    response = supabase_client.table("alerts").update(data).eq("id", alert_id).execute()
+    response = supabase.table("alerts").update(data).eq("id", alert_id).execute()
     return response.data
 
 # --- PROCURE ---
@@ -407,11 +407,11 @@ def procure_residues(req: ProcureRequest):
     # 1. Update residues to procured
     for rid in req.residue_ids:
         # Get residue to find farmer
-        res_data = supabase_client.table("residue_listings").select("*").eq("id", rid).execute()
+        res_data = supabase.table("residue_listings").select("*").eq("id", rid).execute()
         if res_data.data:
             residue = res_data.data[0]
             # Update status
-            supabase_client.table("residue_listings").update({"status": "procured"}).eq("id", rid).execute()
+            supabase.table("residue_listings").update({"status": "procured"}).eq("id", rid).execute()
             
             # 2. Create alert for farmer
             alert_data = {
@@ -422,6 +422,6 @@ def procure_residues(req: ProcureRequest):
                 "severity": "success",
                 "is_read": False
             }
-            supabase_client.table("alerts").insert(alert_data).execute()
+            supabase.table("alerts").insert(alert_data).execute()
             
     return {"status": "success", "message": "Procurement successful"}
