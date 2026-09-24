@@ -24,7 +24,36 @@ export default function FreshnessResultPage() {
         const batchId = params.id as string
         
         // Fetch Produce Batch
-        const produceData = await api.get(`/produce/${batchId}`)
+        let produceData = await api.get(`/produce/${batchId}`)
+        
+        // Fetch Nearby Hubs and calculate real OSRM routing time
+        const lat = produceData.latitude || 16.5;
+        const lng = produceData.longitude || 80.6;
+        const hubsData = await api.get(`/cooling-hubs/nearby?lat=${lat}&lng=${lng}&radius_km=50`).catch(() => []);
+        
+        let osrmTravelTime = produceData.transport_time || 0;
+        let hubToSet = null;
+
+        if (hubsData && hubsData.length > 0) {
+          hubToSet = hubsData[0];
+          try {
+            const osrmRes = await fetch(`https://router.project-osrm.org/route/v1/driving/${lng},${lat};${hubToSet.longitude},${hubToSet.latitude}?overview=false`);
+            const osrmData = await osrmRes.json();
+            if (osrmData && osrmData.routes && osrmData.routes.length > 0) {
+              const durationSeconds = osrmData.routes[0].duration;
+              const hours = (durationSeconds / 3600).toFixed(1);
+              osrmTravelTime = parseFloat(hours);
+              // Save it to display on the Hub card
+              hubToSet.osrm_hours = hours;
+            }
+          } catch (e) {
+            console.error("OSRM routing failed", e);
+          }
+          setNearbyHub(hubToSet);
+        }
+
+        // Override produce transport_time with real OSRM time for the AI prediction
+        produceData = { ...produceData, transport_time: osrmTravelTime };
         setProduce(produceData)
         
         // Predict Freshness
@@ -32,32 +61,11 @@ export default function FreshnessResultPage() {
           produce_type: produceData.produce_type,
           temperature: produceData.temperature || 30,
           humidity: produceData.humidity || 60,
-          transport_time: produceData.transport_time || 0,
+          transport_time: osrmTravelTime,
           storage_type: produceData.storage_type || "open"
         }
         const predictionData = await api.post('/freshness/predict', freshnessReq)
         setPrediction(predictionData)
-
-        // Fetch Nearby Hubs (using real location)
-        const getPosition = (): Promise<{lat: number, lng: number}> => {
-          return new Promise((resolve) => {
-            if ("geolocation" in navigator) {
-              navigator.geolocation.getCurrentPosition(
-                (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-                () => resolve({ lat: 16.5, lng: 80.6 }) // fallback
-              );
-            } else {
-              resolve({ lat: 16.5, lng: 80.6 });
-            }
-          });
-        };
-        
-        const coords = await getPosition();
-        // Request radius = 50km
-        const hubsData = await api.get(`/cooling-hubs/nearby?lat=${coords.lat}&lng=${coords.lng}&radius_km=50`);
-        if (hubsData && hubsData.length > 0) {
-          setNearbyHub(hubsData[0]); // since backend now sorts by distance_km
-        }
 
       } catch (error) {
         console.error("Failed to fetch freshness data:", error)
@@ -219,6 +227,14 @@ export default function FreshnessResultPage() {
                         {nearbyHub.distance_km} km
                       </span>
                     </div>
+                    {nearbyHub.osrm_hours && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Travel Time (OSRM)</span>
+                        <span className="font-medium text-blue-600 dark:text-blue-400">
+                          {nearbyHub.osrm_hours} hours
+                        </span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Capacity</span>
                       <span className="font-medium text-green-600 dark:text-green-500">{nearbyHub.capacity} tons</span>
