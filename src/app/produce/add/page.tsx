@@ -107,20 +107,44 @@ export default function AddProducePage() {
       setLat(latitude);
       setLng(longitude);
 
-      // Using free, no-auth Open-Meteo API for real-time weather data
-      const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m`);
-      const data = await res.json();
+      // 1. Fetch real-time weather using Open-Meteo
+      const weatherPromise = fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m`).then(res => res.json());
       
-      if (data && data.current) {
-        setTemperature(data.current.temperature_2m.toString());
-        setHumidity(data.current.relative_humidity_2m.toString());
+      // 2. Fetch nearest cooling hub from backend
+      const hubsPromise = api.get(`/cooling-hubs/nearby?lat=${latitude}&lng=${longitude}&radius_km=100`).catch(() => []);
+
+      const [weatherData, hubsData] = await Promise.all([weatherPromise, hubsPromise]);
+
+      if (weatherData && weatherData.current) {
+        setTemperature(weatherData.current.temperature_2m.toString());
+        setHumidity(weatherData.current.relative_humidity_2m.toString());
         setLocation(`Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}${isManual ? ' (Manual)' : ''}`);
         setWeatherSuccess(true);
-        toast.success(`Live weather & GPS data synced${isManual ? ' for selected location' : ''}!`);
       }
+
+      // 3. Hit OSRM API to calculate real-time driving duration to the nearest hub
+      if (hubsData && hubsData.length > 0) {
+        const nearestHub = hubsData[0];
+        try {
+          const osrmRes = await fetch(`https://router.project-osrm.org/route/v1/driving/${longitude},${latitude};${nearestHub.longitude},${nearestHub.latitude}?overview=false`);
+          const osrmData = await osrmRes.json();
+          
+          if (osrmData && osrmData.routes && osrmData.routes.length > 0) {
+            const durationSeconds = osrmData.routes[0].duration;
+            const hours = (durationSeconds / 3600).toFixed(1);
+            setTravelTime(hours.toString());
+            toast.success(`Weather & Map Data Synced! Auto-calculated ${hours} hours route to nearest cooling hub.`);
+            return;
+          }
+        } catch (e) {
+          console.error("OSRM routing failed", e);
+        }
+      }
+
+      toast.success(`Live weather & GPS data synced${isManual ? ' for selected location' : ''}!`);
     } catch (error) {
-      console.error("Failed to fetch weather", error);
-      toast.error("Could not reach weather service. Using default values.");
+      console.error("Failed to fetch weather/routing", error);
+      toast.error("Could not reach services. Using default values.");
     } finally {
       setIsFetchingWeather(false);
     }
